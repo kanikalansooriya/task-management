@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { createApiClient, clearAuth } from '../auth';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Task {
@@ -32,16 +33,21 @@ const TasksPage = () => {
     return params.toString();
   };
 
+  const navigate = useNavigate();
+
   const fetchTasks = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const api = createApiClient();
       const query = buildQuery();
-      const response = await axios.get(`/api/tasks${query ? `?${query}` : ''}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/api/tasks${query ? `?${query}` : ''}`);
       setTasks(response.data);
-    } catch {
-      toast.error('Unable to load tasks');
+    } catch (error: any) {
+      if (error.response && [401, 403].includes(error.response.status)) {
+        clearAuth();
+        navigate('/login');
+      } else {
+        toast.error('Unable to load tasks');
+      }
     }
   };
 
@@ -52,12 +58,8 @@ const TasksPage = () => {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        '/api/tasks',
-        { title, description, priority, status, dueDate },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const api = createApiClient();
+      await api.post('/api/tasks', { title, description, priority, status, dueDate });
       toast.success('Task created');
       setTitle('');
       setDescription('');
@@ -66,20 +68,28 @@ const TasksPage = () => {
       setDueDate('');
       fetchTasks();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Could not create task');
+      if (error.response && [401, 403].includes(error.response.status)) {
+        clearAuth();
+        navigate('/login');
+      } else {
+        toast.error(error?.response?.data?.message || 'Could not create task');
+      }
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const api = createApiClient();
+      await api.delete(`/api/tasks/${id}`);
       toast.success('Task deleted');
       fetchTasks();
-    } catch {
-      toast.error('Could not delete task');
+    } catch (error: any) {
+      if (error.response && [401, 403].includes(error.response.status)) {
+        clearAuth();
+        navigate('/login');
+      } else {
+        toast.error('Could not delete task');
+      }
     }
   };
 

@@ -1,8 +1,7 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { jwtSecret } from '../config/database';
-import { db } from '../config/db';
+import { db, jwtSecret } from '../config/db';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body as { email?: string; password?: string };
@@ -16,7 +15,12 @@ export const login = async (req: Request, res: Response) => {
     const users = rows as Array<{ id: number; name: string; email: string; password: string }>;
     const user = users[0];
 
-    if (!user || !bcrypt.compareSync(password, user.password)) {
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 

@@ -12,3 +12,5 @@ export const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+export const jwtSecret = process.env.JWT_SECRET || 'mysecretkey';

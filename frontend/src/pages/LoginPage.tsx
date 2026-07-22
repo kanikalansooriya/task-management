@@ -1,22 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
+import { setAuth, isAuthenticated } from '../auth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('admin@test.com');
   const [password, setPassword] = useState('123456');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       const response = await axios.post('/api/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
+      setAuth(response.data.token, response.data.user);
       toast.success('Login successful');
       navigate('/');
-    } catch {
-      toast.error('Invalid email or password');
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.message || 'Invalid email or password');
+      } else {
+        setError('Server unavailable. Please try again later.');
+      }
+      toast.error(error.response?.data?.message || 'Login failed');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -30,6 +55,7 @@ const LoginPage = () => {
           <p className="mt-2 text-slate-300">Sign in to continue managing your tasks effortlessly.</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
+          {error && <p className="text-sm text-rose-400">{error}</p>}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-200">Email</label>
             <input
@@ -48,8 +74,8 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button className="soft-button w-full">
-            Login
+          <button className="soft-button w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Login'}
           </button>
         </form>
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import { createApiClient, clearAuth, getUser } from '../auth';
 
 interface Task {
   id: number;
@@ -28,28 +28,31 @@ const DashboardPage = () => {
     overdueTasks: 0,
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const api = createApiClient();
         const [tasksResponse, statsResponse] = await Promise.all([
-          axios.get('/api/tasks?sort=newest', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get('/api/dashboard', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          api.get('/api/tasks?sort=newest'),
+          api.get('/api/dashboard'),
         ]);
 
         setTasks(tasksResponse.data);
         setStats(statsResponse.data);
-      } catch {
-        setTasks([]);
+      } catch (error: any) {
+        if (error.response && [401, 403].includes(error.response.status)) {
+          clearAuth();
+          navigate('/login');
+        } else {
+          setTasks([]);
+        }
       }
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   const cards = [
     { label: 'Total Tasks', value: stats.totalTasks, accent: 'from-cyan-500 to-sky-500' },
@@ -59,6 +62,13 @@ const DashboardPage = () => {
     { label: 'Overdue', value: stats.overdueTasks, accent: 'from-rose-500 to-amber-500' },
   ];
 
+  const user = getUser();
+
+  const handleLogout = () => {
+    clearAuth();
+    navigate('/login');
+  };
+
   return (
     <div className="page-shell">
       <div className="mx-auto max-w-6xl">
@@ -67,10 +77,16 @@ const DashboardPage = () => {
             <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Welcome back</p>
             <h1 className="text-3xl font-semibold tracking-tight text-white">Dashboard</h1>
             <p className="mt-1 text-slate-300">Overview of your task activity and momentum.</p>
+            {user && <p className="mt-2 text-sm text-slate-400">Signed in as {user.name}</p>}
           </div>
-          <Link to="/tasks" className="soft-button inline-flex items-center justify-center">
-            Manage Tasks
-          </Link>
+          <div className="flex gap-3">
+            <Link to="/tasks" className="soft-button inline-flex items-center justify-center">
+              Manage Tasks
+            </Link>
+            <button onClick={handleLogout} className="soft-button inline-flex items-center justify-center bg-rose-500/90 hover:bg-rose-500">
+              Logout
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-5">

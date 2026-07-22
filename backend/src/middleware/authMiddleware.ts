@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { jwtSecret } from '../config/database';
+import { jwtSecret } from '../config/db';
 
 declare global {
   namespace Express {
@@ -23,6 +23,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     req.user = { id: decoded.userId };
     next();
   } catch {
-    return res.status(403).json({ message: 'Invalid token' });
+    return res.status(401).json({ message: 'Invalid token or session expired' });
   }
 };
