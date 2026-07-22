@@ -10,30 +10,53 @@ interface Task {
   dueDate: string;
 }
 
+interface DashboardStats {
+  totalTasks: number;
+  pendingTasks: number;
+  inProgressTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+}
+
 const DashboardPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalTasks: 0,
+    pendingTasks: 0,
+    inProgressTasks: 0,
+    completedTasks: 0,
+    overdueTasks: 0,
+  });
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('/api/tasks', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setTasks(response.data);
+        const [tasksResponse, statsResponse] = await Promise.all([
+          axios.get('/api/tasks?sort=newest', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get('/api/dashboard', {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        setTasks(tasksResponse.data);
+        setStats(statsResponse.data);
       } catch {
         setTasks([]);
       }
     };
 
-    fetchTasks();
+    fetchData();
   }, []);
 
-  const stats = [
-    { label: 'Total', value: tasks.length, accent: 'from-cyan-500 to-sky-500' },
-    { label: 'Pending', value: tasks.filter((task) => task.status === 'pending').length, accent: 'from-amber-500 to-orange-500' },
-    { label: 'Completed', value: tasks.filter((task) => task.status === 'completed').length, accent: 'from-emerald-500 to-green-500' },
-    { label: 'In Progress', value: tasks.filter((task) => task.status === 'in_progress').length, accent: 'from-violet-500 to-fuchsia-500' }
+  const cards = [
+    { label: 'Total Tasks', value: stats.totalTasks, accent: 'from-cyan-500 to-sky-500' },
+    { label: 'Pending', value: stats.pendingTasks, accent: 'from-amber-500 to-orange-500' },
+    { label: 'In Progress', value: stats.inProgressTasks, accent: 'from-violet-500 to-fuchsia-500' },
+    { label: 'Completed', value: stats.completedTasks, accent: 'from-emerald-500 to-green-500' },
+    { label: 'Overdue', value: stats.overdueTasks, accent: 'from-rose-500 to-amber-500' },
   ];
 
   return (
@@ -50,13 +73,13 @@ const DashboardPage = () => {
           </Link>
         </div>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="glass-card overflow-hidden transition duration-300 hover:-translate-y-1">
-              <div className={`h-1 w-full bg-gradient-to-r ${stat.accent}`} />
+        <div className="mb-6 grid gap-4 md:grid-cols-5">
+          {cards.map((card) => (
+            <div key={card.label} className="glass-card overflow-hidden transition duration-300 hover:-translate-y-1">
+              <div className={`h-1 w-full bg-gradient-to-r ${card.accent}`} />
               <div className="p-5">
-                <p className="text-sm text-slate-400">{stat.label}</p>
-                <p className="mt-2 text-3xl font-semibold text-white">{stat.value}</p>
+                <p className="text-sm text-slate-400">{card.label}</p>
+                <p className="mt-2 text-3xl font-semibold text-white">{card.value}</p>
               </div>
             </div>
           ))}

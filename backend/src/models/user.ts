@@ -1,7 +1,10 @@
 export interface User {
   id: number;
+  name: string;
   email: string;
   password: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Task {
@@ -11,5 +14,7 @@ export interface Task {
   priority: string;
   status: string;
   dueDate: string;
+  createdAt: string;
+  updatedAt: string;
   userId: number;
 }

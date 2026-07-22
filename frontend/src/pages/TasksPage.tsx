@@ -15,18 +15,29 @@ const TasksPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('medium');
-  const [status, setStatus] = useState('pending');
+  const [priority, setPriority] = useState('Medium');
+  const [status, setStatus] = useState('Pending');
   const [dueDate, setDueDate] = useState('');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
   const [sortOrder, setSortOrder] = useState('newest');
+
+  const buildQuery = () => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (filterStatus !== 'all') params.append('status', filterStatus);
+    if (filterPriority !== 'all') params.append('priority', filterPriority);
+    if (sortOrder) params.append('sort', sortOrder);
+    return params.toString();
+  };
 
   const fetchTasks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/tasks', {
-        headers: { Authorization: `Bearer ${token}` }
+      const query = buildQuery();
+      const response = await axios.get(`/api/tasks${query ? `?${query}` : ''}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       setTasks(response.data);
     } catch {
@@ -36,25 +47,7 @@ const TasksPage = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, []);
-
-  const filteredTasks = useMemo(() => {
-    const filtered = tasks.filter((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-
-    return filtered.sort((a, b) => {
-      if (sortOrder === 'oldest') {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      }
-      if (sortOrder === 'due_date') {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      }
-      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-    });
-  }, [tasks, search, filterStatus, sortOrder]);
+  }, [search, filterStatus, filterPriority, sortOrder]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,12 +61,12 @@ const TasksPage = () => {
       toast.success('Task created');
       setTitle('');
       setDescription('');
-      setPriority('medium');
-      setStatus('pending');
+      setPriority('Medium');
+      setStatus('Pending');
       setDueDate('');
       fetchTasks();
-    } catch {
-      toast.error('Could not create task');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Could not create task');
     }
   };
 
@@ -81,7 +74,7 @@ const TasksPage = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`/api/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Task deleted');
       fetchTasks();
@@ -89,6 +82,10 @@ const TasksPage = () => {
       toast.error('Could not delete task');
     }
   };
+
+  const taskRows = useMemo(() => {
+    return tasks;
+  }, [tasks]);
 
   return (
     <div className="page-shell">
@@ -109,25 +106,35 @@ const TasksPage = () => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 md:flex-row">
                 <select
-                  className="input-shell w-auto"
+                  className="input-shell w-full md:w-auto"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
                   <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
                 </select>
                 <select
-                  className="input-shell w-auto"
+                  className="input-shell w-full md:w-auto"
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                >
+                  <option value="all">All Priority</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+                <select
+                  className="input-shell w-full md:w-auto"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
-                  <option value="due_date">Due Date</option>
+                  <option value="dueDate">Due Date</option>
                 </select>
               </div>
             </div>
@@ -144,7 +151,7 @@ const TasksPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTasks.map((task) => (
+                  {taskRows.map((task) => (
                     <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
                       <td className="py-3 text-slate-100">{task.title}</td>
                       <td className="py-3 text-slate-100">{task.priority}</td>
@@ -187,18 +194,18 @@ const TasksPage = () => {
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
               </select>
               <select
                 className="input-shell"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </select>
               <input
                 className="input-shell"
