@@ -113,7 +113,7 @@ const DashboardPage = () => {
 
 
             <p className="mt-1 text-[var(--text-secondary)]">
-              Overview of your task activity and momentum.
+              Overview of your task activity.
             </p>
 
 
