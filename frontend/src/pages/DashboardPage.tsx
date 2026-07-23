@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createApiClient, clearAuth, getUser } from '../auth';
-import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 interface Task {
   id: number;
@@ -30,7 +30,6 @@ const DashboardPage = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,10 +83,8 @@ const DashboardPage = () => {
             <p className="mt-1 text-slate-300">Overview of your task activity and momentum.</p>
             {user && <p className="mt-2 text-sm text-slate-400">Signed in as {user.name}</p>}
           </div>
-          <div className="flex flex-wrap gap-3">
-            <button onClick={toggleTheme} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-medium text-slate-100">
-              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle />
             <Link to="/tasks" className="soft-button inline-flex items-center justify-center">
               Manage Tasks
             </Link>
@@ -110,7 +107,7 @@ const DashboardPage = () => {
         </div>
 
         <div className="glass-card p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-white">Recent Tasks</h2>
               <p className="text-sm text-slate-400">The latest updates from your workspace.</p>
@@ -120,6 +117,10 @@ const DashboardPage = () => {
           {isLoading ? (
             <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/10 px-4 py-10 text-center text-sm text-slate-300">
               Loading dashboard...
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/15 px-4 py-10 text-center text-sm text-slate-400">
+              No tasks yet. Create your first task from the task board.
             </div>
           ) : (
             <div className="overflow-x-auto">

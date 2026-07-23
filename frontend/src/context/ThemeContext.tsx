@@ -11,13 +11,21 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 const STORAGE_KEY = 'task-manager-theme';
 
+const getSystemTheme = (): Theme => {
+  if (typeof window === 'undefined') {
+    return 'dark';
+  }
+
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+};
+
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') {
     return 'dark';
   }
 
   const storedTheme = window.localStorage.getItem(STORAGE_KEY);
-  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
+  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : getSystemTheme();
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {

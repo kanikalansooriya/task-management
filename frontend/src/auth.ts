@@ -13,6 +13,7 @@ export interface AuthResponse {
 
 const AUTH_TOKEN_KEY = 'token';
 const AUTH_USER_KEY = 'user';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
 
@@ -44,7 +45,9 @@ export const attachAuthHeader = () => {
 };
 
 export const createApiClient = () => {
-  const instance = axios.create();
+  const instance = axios.create({
+    baseURL: API_BASE_URL,
+  });
 
   instance.interceptors.request.use((config) => {
     const token = getToken();
