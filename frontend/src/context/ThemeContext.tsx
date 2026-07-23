@@ -13,10 +13,12 @@ const STORAGE_KEY = 'task-manager-theme';
 
 const getSystemTheme = (): Theme => {
   if (typeof window === 'undefined') {
-    return 'dark';
+    return 'light';
   }
 
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 };
 
 const getInitialTheme = (): Theme => {

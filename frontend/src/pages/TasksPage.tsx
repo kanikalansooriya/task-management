@@ -161,11 +161,17 @@ const TasksPage = () => {
     <div className="page-shell">
       <Toaster position="top-right" />
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-col gap-4 rounded-[32px] border border-white/10 bg-slate-900/50 p-6 shadow-[0_20px_60px_-15px_rgba(2,8,23,0.9)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 rounded-[32px] border p-6 shadow-xl backdrop-blur-xl md:flex-row md:items-center md:justify-between"style={{
+            background: "var(--card-bg)",
+            borderColor: "var(--card-border)" }}>
           <div>
             <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task board</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-white">Tasks</h1>
-            <p className="mt-1 text-slate-300">Create, search, filter, and manage tasks with style.</p>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }} >
+              Tasks
+            </h1>
+            <p style={{ color: "var(--text-secondary)" }}>
+              Create, search, filter, and manage tasks with style.
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button onClick={() => navigate('/')} className="soft-button">Back to dashboard</button>
@@ -216,7 +222,10 @@ const TasksPage = () => {
             </div>
 
             {isLoading ? (
-              <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/10 px-4 py-10 text-center text-sm text-slate-300">
+              <div className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm"style={{
+                color: "var(--text-secondary)",
+                borderColor: "var(--card-border)"
+              }}>
                 Loading tasks...
               </div>
             ) : taskRows.length === 0 ? (
@@ -227,7 +236,10 @@ const TasksPage = () => {
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left">
                   <thead>
-                    <tr className="border-b border-white/10 text-sm text-slate-400">
+                    <tr className="border-b text-sm"style={{
+                      borderColor: "var(--card-border)",
+                      color: "var(--text-secondary)"
+                    }}>
                       <th className="py-3">Title</th>
                       <th className="py-3">Priority</th>
                       <th className="py-3">Status</th>
@@ -237,11 +249,14 @@ const TasksPage = () => {
                   </thead>
                   <tbody>
                     {taskRows.map((task) => (
-                      <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
-                        <td className="py-3 text-slate-100">{task.title}</td>
-                        <td className="py-3 text-slate-100">{task.priority}</td>
-                        <td className="py-3 text-slate-100">{task.status}</td>
-                        <td className="py-3 text-slate-100">{task.dueDate}</td>
+                      <tr className="border-b text-sm"  style={{
+                          borderColor: "var(--card-border)",
+                          color: "var(--text-secondary)"
+                        }}>
+                        <td className="py-3"style={{ color: "var(--text-primary)"}} > {task.title}</td>
+                        <td className="py-3"style={{ color: "var(--text-primary)"}} > {task.priority}</td>
+                        <td className="py-3"style={{ color: "var(--text-primary)"}} > {task.status}</td>
+                        <td className="py-3"style={{ color: "var(--text-primary)"}} > {task.dueDate}</td>
                         <td className="py-3">
                           <div className="flex flex-wrap gap-2">
                             <button
@@ -270,8 +285,8 @@ const TasksPage = () => {
           <form onSubmit={handleCreateTask} className="glass-card p-6">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-semibold text-white">Create Task</h2>
-                <p className="mt-1 text-sm text-slate-400">Add a fresh task to your board.</p>
+                <h2 className="text-xl font-semibold"style={{ color: "var(--text-primary)"}} > Create Task </h2>
+                <p className="mt-1 text-sm"style={{ color: "var(--text-secondary)"}}>Add a fresh task to your board.</p>
               </div>
               <div className="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">New</div>
             </div>
@@ -325,13 +340,15 @@ const TasksPage = () => {
 
       {isModalOpen && editingTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-[28px] border border-white/10 bg-white/90 p-6 shadow-2xl dark:bg-slate-900/95">
+          <div className="w-full max-w-lg rounded-[28px] border p-6 shadow-2xl" style={{
+              background: "var(--card-bg)",
+              borderColor: "var(--card-border)"}}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-500">Edit task</p>
-                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Update task details</h2>
+                <h2 className="text-2xl font-semibold"style={{ color: "var(--text-primary)"}}>Update task details</h2>
               </div>
-              <button onClick={closeEditModal} className="rounded-full px-3 py-1 text-sm text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800">Close</button>
+              <button onClick={closeEditModal} className="rounded-full px-3 py-1 text-sm"style={{ color: "var(--text-secondary)"}}>Close</button>
             </div>
 
             <form onSubmit={handleUpdateTask} className="space-y-3">
@@ -378,7 +395,7 @@ const TasksPage = () => {
                 <button type="submit" className="soft-button w-full sm:w-auto" disabled={isSubmitting}>
                   {isSubmitting ? 'Updating...' : 'Save changes'}
                 </button>
-                <button type="button" onClick={closeEditModal} className="rounded-2xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                <button type="button" onClick={closeEditModal} className="rounded-2xl border border-slate-300 px-4 py-2.5 font-semibold s"style={{ borderColor: "var(--card-border)",color: "var(--text-primary)",background: "var(--card-bg)"}}>
                   Cancel
                 </button>
               </div>
