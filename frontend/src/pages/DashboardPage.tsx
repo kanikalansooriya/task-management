@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createApiClient, clearAuth, getUser } from '../auth';
+import { useTheme } from '../context/ThemeContext';
 
 interface Task {
   id: number;
@@ -27,11 +28,13 @@ const DashboardPage = () => {
     completedTasks: 0,
     overdueTasks: 0,
   });
-
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const api = createApiClient();
         const [tasksResponse, statsResponse] = await Promise.all([
@@ -48,6 +51,8 @@ const DashboardPage = () => {
         } else {
           setTasks([]);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -79,7 +84,10 @@ const DashboardPage = () => {
             <p className="mt-1 text-slate-300">Overview of your task activity and momentum.</p>
             {user && <p className="mt-2 text-sm text-slate-400">Signed in as {user.name}</p>}
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
+            <button onClick={toggleTheme} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-medium text-slate-100">
+              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
             <Link to="/tasks" className="soft-button inline-flex items-center justify-center">
               Manage Tasks
             </Link>
@@ -89,7 +97,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-5">
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {cards.map((card) => (
             <div key={card.label} className="glass-card overflow-hidden transition duration-300 hover:-translate-y-1">
               <div className={`h-1 w-full bg-gradient-to-r ${card.accent}`} />
@@ -107,29 +115,36 @@ const DashboardPage = () => {
               <h2 className="text-xl font-semibold text-white">Recent Tasks</h2>
               <p className="text-sm text-slate-400">The latest updates from your workspace.</p>
             </div>
+            <Link to="/tasks" className="text-sm font-medium text-cyan-400">Open task board</Link>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="border-b border-white/10 text-sm text-slate-400">
-                  <th className="py-3">Title</th>
-                  <th className="py-3">Priority</th>
-                  <th className="py-3">Status</th>
-                  <th className="py-3">Due Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.slice(0, 5).map((task) => (
-                  <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
-                    <td className="py-3 text-slate-100">{task.title}</td>
-                    <td className="py-3 text-slate-100">{task.priority}</td>
-                    <td className="py-3 text-slate-100">{task.status}</td>
-                    <td className="py-3 text-slate-100">{task.dueDate}</td>
+          {isLoading ? (
+            <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/10 px-4 py-10 text-center text-sm text-slate-300">
+              Loading dashboard...
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-white/10 text-sm text-slate-400">
+                    <th className="py-3">Title</th>
+                    <th className="py-3">Priority</th>
+                    <th className="py-3">Status</th>
+                    <th className="py-3">Due Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {tasks.slice(0, 5).map((task) => (
+                    <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
+                      <td className="py-3 text-slate-100">{task.title}</td>
+                      <td className="py-3 text-slate-100">{task.priority}</td>
+                      <td className="py-3 text-slate-100">{task.status}</td>
+                      <td className="py-3 text-slate-100">{task.dueDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

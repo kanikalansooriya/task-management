@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createApiClient, clearAuth } from '../auth';
 import toast, { Toaster } from 'react-hot-toast';
+import { useTheme } from '../context/ThemeContext';
 
 interface Task {
   id: number;
@@ -12,17 +13,27 @@ interface Task {
   dueDate: string;
 }
 
+const emptyForm = {
+  title: '',
+  description: '',
+  priority: 'Medium',
+  status: 'Pending',
+  dueDate: '',
+};
+
 const TasksPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('Medium');
-  const [status, setStatus] = useState('Pending');
-  const [dueDate, setDueDate] = useState('');
+  const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const buildQuery = () => {
     const params = new URLSearchParams();
@@ -33,9 +44,8 @@ const TasksPage = () => {
     return params.toString();
   };
 
-  const navigate = useNavigate();
-
   const fetchTasks = async () => {
+    setIsLoading(true);
     try {
       const api = createApiClient();
       const query = buildQuery();
@@ -48,6 +58,8 @@ const TasksPage = () => {
       } else {
         toast.error('Unable to load tasks');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,18 +67,19 @@ const TasksPage = () => {
     fetchTasks();
   }, [search, filterStatus, filterPriority, sortOrder]);
 
+  const resetForm = () => {
+    setForm(emptyForm);
+  };
+
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const api = createApiClient();
-      await api.post('/api/tasks', { title, description, priority, status, dueDate });
-      toast.success('Task created');
-      setTitle('');
-      setDescription('');
-      setPriority('Medium');
-      setStatus('Pending');
-      setDueDate('');
-      fetchTasks();
+      await api.post('/api/tasks', form);
+      toast.success('Task created successfully');
+      resetForm();
+      await fetchTasks();
     } catch (error: any) {
       if (error.response && [401, 403].includes(error.response.status)) {
         clearAuth();
@@ -74,15 +87,20 @@ const TasksPage = () => {
       } else {
         toast.error(error?.response?.data?.message || 'Could not create task');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
+    const confirmed = window.confirm('Delete this task?');
+    if (!confirmed) return;
+
     try {
       const api = createApiClient();
       await api.delete(`/api/tasks/${id}`);
       toast.success('Task deleted');
-      fetchTasks();
+      await fetchTasks();
     } catch (error: any) {
       if (error.response && [401, 403].includes(error.response.status)) {
         clearAuth();
@@ -93,18 +111,65 @@ const TasksPage = () => {
     }
   };
 
-  const taskRows = useMemo(() => {
-    return tasks;
-  }, [tasks]);
+  const openEditModal = (task: Task) => {
+    setEditingTask(task);
+    setForm({
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      status: task.status,
+      dueDate: task.dueDate,
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+    resetForm();
+  };
+
+  const handleUpdateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask) return;
+
+    setIsSubmitting(true);
+    try {
+      const api = createApiClient();
+      await api.put(`/api/tasks/${editingTask.id}`, form);
+      toast.success('Task updated successfully');
+      closeEditModal();
+      await fetchTasks();
+    } catch (error: any) {
+      if (error.response && [401, 403].includes(error.response.status)) {
+        clearAuth();
+        navigate('/login');
+      } else {
+        toast.error(error?.response?.data?.message || 'Could not update task');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const taskRows = useMemo(() => tasks, [tasks]);
 
   return (
     <div className="page-shell">
       <Toaster position="top-right" />
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 rounded-[32px] border border-white/10 bg-slate-900/50 p-6 shadow-[0_20px_60px_-15px_rgba(2,8,23,0.9)] backdrop-blur-xl">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task board</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Tasks</h1>
-          <p className="mt-1 text-slate-300">Create, search, filter, and manage tasks with style.</p>
+        <div className="mb-6 flex flex-col gap-4 rounded-[32px] border border-white/10 bg-slate-900/50 p-6 shadow-[0_20px_60px_-15px_rgba(2,8,23,0.9)] backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task board</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white">Tasks</h1>
+            <p className="mt-1 text-slate-300">Create, search, filter, and manage tasks with style.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/')} className="soft-button">Back to dashboard</button>
+            <button onClick={toggleTheme} className="rounded-2xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-medium text-slate-100">
+              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -149,37 +214,55 @@ const TasksPage = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
-                <thead>
-                  <tr className="border-b border-white/10 text-sm text-slate-400">
-                    <th className="py-3">Title</th>
-                    <th className="py-3">Priority</th>
-                    <th className="py-3">Status</th>
-                    <th className="py-3">Due Date</th>
-                    <th className="py-3">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {taskRows.map((task) => (
-                    <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
-                      <td className="py-3 text-slate-100">{task.title}</td>
-                      <td className="py-3 text-slate-100">{task.priority}</td>
-                      <td className="py-3 text-slate-100">{task.status}</td>
-                      <td className="py-3 text-slate-100">{task.dueDate}</td>
-                      <td className="py-3">
-                        <button
-                          onClick={() => handleDelete(task.id)}
-                          className="rounded-xl bg-rose-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500"
-                        >
-                          Delete
-                        </button>
-                      </td>
+            {isLoading ? (
+              <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/10 px-4 py-10 text-center text-sm text-slate-300">
+                Loading tasks...
+              </div>
+            ) : taskRows.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/15 px-4 py-10 text-center text-sm text-slate-400">
+                No tasks found for the current filters.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left">
+                  <thead>
+                    <tr className="border-b border-white/10 text-sm text-slate-400">
+                      <th className="py-3">Title</th>
+                      <th className="py-3">Priority</th>
+                      <th className="py-3">Status</th>
+                      <th className="py-3">Due Date</th>
+                      <th className="py-3">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {taskRows.map((task) => (
+                      <tr key={task.id} className="border-b border-white/10 transition hover:bg-white/5">
+                        <td className="py-3 text-slate-100">{task.title}</td>
+                        <td className="py-3 text-slate-100">{task.priority}</td>
+                        <td className="py-3 text-slate-100">{task.status}</td>
+                        <td className="py-3 text-slate-100">{task.dueDate}</td>
+                        <td className="py-3">
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => openEditModal(task)}
+                              className="rounded-xl bg-cyan-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-cyan-500"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(task.id)}
+                              className="rounded-xl bg-rose-500/90 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-rose-500"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleCreateTask} className="glass-card p-6">
@@ -188,21 +271,21 @@ const TasksPage = () => {
               <input
                 className="input-shell"
                 placeholder="Task title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={form.title}
+                onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
                 required
               />
               <textarea
                 className="input-shell min-h-[96px]"
                 placeholder="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={form.description}
+                onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
                 required
               />
               <select
                 className="input-shell"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
+                value={form.priority}
+                onChange={(e) => setForm((current) => ({ ...current, priority: e.target.value }))}
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -210,8 +293,8 @@ const TasksPage = () => {
               </select>
               <select
                 className="input-shell"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                value={form.status}
+                onChange={(e) => setForm((current) => ({ ...current, status: e.target.value }))}
               >
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
@@ -220,17 +303,81 @@ const TasksPage = () => {
               <input
                 className="input-shell"
                 type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                value={form.dueDate}
+                onChange={(e) => setForm((current) => ({ ...current, dueDate: e.target.value }))}
                 required
               />
-              <button className="soft-button w-full">
-                Add Task
+              <button className="soft-button w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Add Task'}
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {isModalOpen && editingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-[28px] border border-white/10 bg-white/90 p-6 shadow-2xl dark:bg-slate-900/95">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-500">Edit task</p>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Update task details</h2>
+              </div>
+              <button onClick={closeEditModal} className="rounded-full px-3 py-1 text-sm text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800">Close</button>
+            </div>
+
+            <form onSubmit={handleUpdateTask} className="space-y-3">
+              <input
+                className="input-shell"
+                placeholder="Task title"
+                value={form.title}
+                onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
+                required
+              />
+              <textarea
+                className="input-shell min-h-[96px]"
+                placeholder="Description"
+                value={form.description}
+                onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
+                required
+              />
+              <select
+                className="input-shell"
+                value={form.priority}
+                onChange={(e) => setForm((current) => ({ ...current, priority: e.target.value }))}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+              <select
+                className="input-shell"
+                value={form.status}
+                onChange={(e) => setForm((current) => ({ ...current, status: e.target.value }))}
+              >
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+              <input
+                className="input-shell"
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((current) => ({ ...current, dueDate: e.target.value }))}
+                required
+              />
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button type="submit" className="soft-button w-full sm:w-auto" disabled={isSubmitting}>
+                  {isSubmitting ? 'Updating...' : 'Save changes'}
+                </button>
+                <button type="button" onClick={closeEditModal} className="rounded-2xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

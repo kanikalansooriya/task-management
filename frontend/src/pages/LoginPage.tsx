@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { setAuth, isAuthenticated } from '../auth';
+import { useTheme } from '../context/ThemeContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('admin@test.com');
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -49,10 +51,15 @@ const LoginPage = () => {
     <div className="page-shell flex items-center justify-center p-4">
       <Toaster position="top-right" />
       <div className="glass-card w-full max-w-md p-8">
-        <div className="mb-6">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task flow</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h1>
-          <p className="mt-2 text-slate-300">Sign in to continue managing your tasks effortlessly.</p>
+        <div className="mb-6 flex items-start justify-between gap-3">
+          <div>
+            <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task flow</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h1>
+            <p className="mt-2 text-slate-300">Sign in to continue managing your tasks effortlessly.</p>
+          </div>
+          <button onClick={toggleTheme} className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-slate-100">
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           {error && <p className="text-sm text-rose-400">{error}</p>}

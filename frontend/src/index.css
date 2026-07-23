@@ -4,6 +4,26 @@
 
 :root {
   color-scheme: dark;
+  --app-bg: linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
+  --card-bg: rgba(15, 23, 42, 0.72);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --input-bg: rgba(2, 6, 23, 0.72);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --input-placeholder: #94a3b8;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --app-bg: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 48%, #fef3c7 100%);
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(15, 23, 42, 0.08);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --input-bg: rgba(255, 255, 255, 0.95);
+  --input-border: rgba(15, 23, 42, 0.12);
+  --input-placeholder: #64748b;
 }
 
 @layer base {
@@ -11,10 +31,11 @@
     margin: 0;
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100vh;
-    background: linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
-    color: #f8fafc;
+    background: var(--app-bg);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
   * {
@@ -23,29 +44,38 @@
 
   ::selection {
     background: rgba(34, 211, 238, 0.35);
-    color: #f8fafc;
+    color: inherit;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply rounded-[28px] border border-white/10 bg-slate-900/60 shadow-[0_25px_80px_-20px_rgba(2,8,23,0.9)] backdrop-blur-xl;
+    @apply rounded-[28px] border shadow-[0_20px_80px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl;
+    background: var(--card-bg);
+    border-color: var(--card-border);
   }
 
   .soft-button {
-    @apply rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-cyan-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-cyan-400/30;
+    @apply rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-cyan-500/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .input-shell {
-    @apply w-full rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2.5 text-slate-100 outline-none transition duration-300 placeholder:text-slate-400 focus:border-cyan-400/60 focus:bg-slate-900/80;
+    @apply w-full rounded-2xl border px-3 py-2.5 outline-none transition duration-300 focus:border-cyan-400/60;
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+  }
+
+  .input-shell::placeholder {
+    color: var(--input-placeholder);
   }
 
   .page-shell {
     min-height: 100vh;
     padding: 1.5rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     background:
       radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 32%),
-      linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
+      var(--app-bg);
   }
 }
