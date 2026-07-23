@@ -50,14 +50,14 @@ const LoginPage = () => {
       <Toaster position="top-right" />
       <div className="glass-card w-full max-w-md p-6 sm:p-8">
         <div className="mb-6">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-300">Task flow</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-300">Sign in to continue managing your tasks effortlessly.</p>
+          <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-400">Task flow</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Welcome back</h1>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Sign in to continue managing your tasks effortlessly.</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           {error && <p className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{error}</p>}
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-200">Email</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">Email</label>
             <input
               className="input-shell"
               type="email"
@@ -66,7 +66,7 @@ const LoginPage = () => {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-200">Password</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--text-primary)]">Password</label>
             <input
               className="input-shell"
               type="password"

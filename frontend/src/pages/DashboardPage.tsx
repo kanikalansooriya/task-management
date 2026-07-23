@@ -63,9 +63,7 @@ const DashboardPage = () => {
     };
 
     fetchData();
-
   }, [navigate]);
-
 
   const cards = [
     { label: 'Total Tasks', value: stats.totalTasks, accent: 'from-cyan-500 to-sky-500' },
@@ -75,21 +73,14 @@ const DashboardPage = () => {
     { label: 'Overdue', value: stats.overdueTasks, accent: 'from-rose-500 to-amber-500' },
   ];
 
-
   const user = getUser();
-
-
   const handleLogout = () => {
     clearAuth();
     navigate('/login');
   };
-
-
   return (
     <div className="page-shell">
-
       <div className="mx-auto max-w-6xl">
-
 
         {/* Header */}
         <div
@@ -97,61 +88,39 @@ const DashboardPage = () => {
           style={{
             background: "var(--card-bg)",
             borderColor: "var(--card-border)"
-          }}
-        >
-
+          }}>
           <div>
 
             <p className="mb-2 text-sm font-medium uppercase tracking-[0.3em] text-cyan-400">
               Welcome back
             </p>
-
-
             <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
               Dashboard
             </h1>
-
-
             <p className="mt-1 text-[var(--text-secondary)]">
               Overview of your task activity.
             </p>
-
-
             {user && (
               <p className="mt-2 text-sm text-[var(--text-secondary)]">
                 Signed in as {user.name}
               </p>
             )}
-
           </div>
-
 
           <div className="flex flex-wrap items-center gap-3">
-
             <ThemeToggle />
-
-
             <Link
               to="/tasks"
-              className="soft-button inline-flex items-center justify-center"
-            >
+              className="soft-button inline-flex items-center justify-center">
               Manage Tasks
             </Link>
-
-
             <button
               onClick={handleLogout}
-              className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white transition hover:bg-rose-600"
-            >
+              className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white transition hover:bg-rose-600">
               Logout
             </button>
-
-
           </div>
-
         </div>
-
-
 
         {/* Stats Cards */}
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -160,75 +129,44 @@ const DashboardPage = () => {
 
             <div
               key={card.label}
-              className="glass-card overflow-hidden transition duration-300 hover:-translate-y-1"
-            >
-
+              className="glass-card overflow-hidden transition duration-300 hover:-translate-y-1">
               <div className={`h-1 w-full bg-gradient-to-r ${card.accent}`} />
-
-
               <div className="p-5">
-
                 <p className="text-sm text-[var(--text-secondary)]">
                   {card.label}
                 </p>
-
-
                 <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
                   {card.value}
                 </p>
-
-
               </div>
-
             </div>
 
           ))}
-
         </div>
 
-
-
         {/* Recent Tasks */}
-
         <div className="glass-card p-6">
-
-
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-
-
             <div>
-
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                 Recent Tasks
               </h2>
-
-
               <p className="text-sm text-[var(--text-secondary)]">
                 The latest updates from your workspace.
               </p>
 
             </div>
-
-
             <Link
               to="/tasks"
-              className="text-sm font-medium text-cyan-400"
-            >
+              className="text-sm font-medium text-cyan-400">
               Open task board
             </Link>
-
-
           </div>
-
-
-
           {isLoading ? (
 
             <div className="rounded-2xl border border-dashed border-cyan-400/30 bg-cyan-500/10 px-4 py-10 text-center text-sm text-[var(--text-secondary)]">
               Loading dashboard...
             </div>
-
-
           ) : tasks.length === 0 ? (
 
             <div className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-[var(--text-secondary)]"
@@ -238,36 +176,22 @@ const DashboardPage = () => {
             >
               No tasks yet. Create your first task from the task board.
             </div>
-
-
           ) : (
-
             <div className="overflow-x-auto">
-
-
               <table className="min-w-full text-left">
-
-
                 <thead>
-
                   <tr
                     className="border-b text-sm text-[var(--text-secondary)]"
                     style={{
                       borderColor:"var(--card-border)"
-                    }}
-                  >
+                    }}>
 
                     <th className="py-3">Title</th>
                     <th className="py-3">Priority</th>
                     <th className="py-3">Status</th>
                     <th className="py-3">Due Date</th>
-
                   </tr>
-
                 </thead>
-
-
-
                 <tbody>
 
                   {tasks.slice(0,5).map((task)=>(
@@ -277,24 +201,16 @@ const DashboardPage = () => {
                       className="border-b transition hover:bg-black/5 dark:hover:bg-white/5"
                       style={{
                         borderColor:"var(--card-border)"
-                      }}
-                    >
-
+                      }}>
                       <td className="py-3 text-[var(--text-primary)]">
                         {task.title}
                       </td>
-
-
                       <td className="py-3 text-[var(--text-primary)]">
                         {task.priority}
                       </td>
-
-
                       <td className="py-3 text-[var(--text-primary)]">
                         {task.status}
                       </td>
-
-
                       <td className="py-3 text-[var(--text-primary)]">
                         {task.dueDate}
                       </td>
